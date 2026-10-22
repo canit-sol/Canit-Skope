@@ -74,7 +74,7 @@ export class ReportsJsonProvider {
     }
 
     const defaultClients = [
-      { clientId: 'nitin_wiers', name: 'nitin wiers' },
+      { clientId: 'nitin_wire', name: 'nitin wire' },
       { clientId: 'omnevum', name: 'omnevum' },
       { clientId: 'redbay', name: 'redbay' },
       { clientId: 'clf', name: 'clf' },
@@ -107,7 +107,8 @@ export class ReportsJsonProvider {
       }
     }
 
-    const cId = requestedClient || clientId || 'nitin_wiers';
+    const normalizedReq = requestedClient === 'nitin_wiers' ? 'nitin_wire' : requestedClient;
+    const cId = normalizedReq || (clientId === 'nitin_wiers' ? 'nitin_wire' : clientId) || 'nitin_wire';
 
     let url = `${this.apiEndpoint}?v=${Date.now()}`;
     if (token) {

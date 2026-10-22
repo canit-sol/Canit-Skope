@@ -32,7 +32,7 @@ export class CsvEngine {
       'total leads', 'form inquiries', 'lead submissions', 'conversions (leads)'
     ],
     phoneCalls: [
-      'phone calls', 'calls', 'phone inquiries', 'call interactions', 'phone call',
+      'phone', 'phone calls', 'calls', 'phone inquiries', 'call interactions', 'phone call',
       'click to call', 'call leads', 'phone leads'
     ],
     views: [
@@ -917,7 +917,9 @@ export class CsvEngine {
       { pattern: /^\s*(google\s*pmax|performance\s*max)\s*$/i, platform: 'google', channel: 'PMax' },
       { pattern: /^\s*youtube(\s+ads)?\s*$/i, platform: 'google', channel: 'YouTube' },
       { pattern: /^\s*google(\s+ads)?\s*$/i, platform: 'google', channel: 'Search' },
-      { pattern: /^\s*(meta|facebook|fb|instagram)(\s+ads)?\s*$/i, platform: 'meta', channel: 'Meta' }
+      { pattern: /^\s*(meta|facebook|fb|instagram)(\s+ads)?\s*$/i, platform: 'meta', channel: 'Meta' },
+      { pattern: /^\s*linkedin\s*$/i, platform: 'linkedin', channel: 'LinkedIn' },
+      { pattern: /^\s*boosting\s*$/i, platform: 'boosting', channel: 'Boosting' }
     ];
 
     const periodDataMap = {};
@@ -931,14 +933,16 @@ export class CsvEngine {
     let currentChannel = 'Meta';
     let currentCampaignId = '';
     let campCounter = 0;
+    let isBoosting = false;
+    const recordedCampaignNames = new Set();
 
     for (let r = 0; r < rawRows.length; r++) {
       const row = rawRows[r];
       const col0 = (row[headers[0]] || '').trim();
       const col1 = (row[headers[1]] || '').trim();
 
-      // 1. Ignore summary rows such as Total, Total Spent
-      if (/^total/i.test(col0) || /^summary/i.test(col0)) {
+      // 1. Ignore summary rows such as Total, Total Spent, Ads Spends, Boost Spends
+      if (/^(total|summary|ads spends|boost spends)/i.test(col0)) {
         continue;
       }
 
@@ -946,9 +950,18 @@ export class CsvEngine {
       const isSectionHeader = !col1 && SECTION_PATTERNS.some(s => s.pattern.test(col0));
       if (isSectionHeader) {
         const matched = SECTION_PATTERNS.find(s => s.pattern.test(col0));
-        currentPlatform = matched.platform;
-        currentChannel = matched.channel;
-        currentSection = col0;
+        if (/boosting/i.test(col0)) {
+          isBoosting = true;
+          currentSection = 'Boosting';
+        } else if (isBoosting) {
+          currentPlatform = matched.platform === 'linkedin' ? 'linkedin' : (matched.platform === 'google' ? 'google' : 'meta');
+          currentChannel = matched.channel;
+          currentSection = `Boosting - ${col0}`;
+        } else {
+          currentPlatform = matched.platform;
+          currentChannel = matched.channel;
+          currentSection = col0;
+        }
         currentCampaign = '';
         currentCampaignId = '';
         continue;
@@ -956,16 +969,49 @@ export class CsvEngine {
 
       // 3. Campaign name fill-down (deterministic, dynamic section inheritance)
       if (col0) {
-        currentCampaign = col0;
-        campCounter++;
-        if (/instant form|fb|ig|meta|facebook/i.test(col0) && currentPlatform !== 'google') {
-          currentPlatform = 'meta';
-          currentChannel = 'Meta';
-        } else if (/search|pmax|adwords|google/i.test(col0) && currentPlatform === 'unknown') {
-          currentPlatform = 'google';
-          currentChannel = 'Search';
+        const isSubLabel = col0.startsWith('[') || 
+          /^(whatsapp leads|instant form leads|site traffic)$/i.test(col0);
+
+        if (isSubLabel && currentCampaign) {
+          // Sub-label belongs to current parent campaign! Keep currentCampaign and currentCampaignId!
+        } else {
+          let campName = col0;
+          if (isBoosting) {
+            if (/^posts boosting$/i.test(campName)) {
+              campName = `${currentSection} Posts boosting`;
+            }
+
+            // Deduplicate campaigns in boosting that duplicate main platform campaigns
+            const norm = campName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const isDup = Array.from(recordedCampaignNames).some(existing => {
+              const exNorm = existing.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (norm === exNorm) return true;
+              if (norm.includes('pagelike') && exNorm.includes('pagelike')) return true;
+              if (norm.includes('profilevisit') && exNorm.includes('profilevisit')) return true;
+              if (norm.includes('videoviews') && exNorm.includes('videoads')) return true;
+              return false;
+            });
+
+            if (isDup) {
+              currentCampaign = '';
+              currentCampaignId = '';
+              continue;
+            }
+          }
+
+          currentCampaign = campName;
+          campCounter++;
+          recordedCampaignNames.add(campName);
+
+          if (/instant form|fb|ig|meta|facebook/i.test(col0) && currentPlatform !== 'google') {
+            currentPlatform = 'meta';
+            currentChannel = 'Meta';
+          } else if (/search|pmax|adwords|google/i.test(col0) && currentPlatform === 'unknown') {
+            currentPlatform = 'google';
+            currentChannel = 'Search';
+          }
+          currentCampaignId = `camp_${campCounter}_${currentCampaign.replace(/[^a-zA-Z0-9]/g, '_')}`;
         }
-        currentCampaignId = `camp_${campCounter}_${currentCampaign.replace(/[^a-zA-Z0-9]/g, '_')}`;
       }
 
       if (!currentCampaign || !col1 || !currentCampaignId) continue;
@@ -1043,7 +1089,7 @@ export class CsvEngine {
         const phoneCalls = m.phoneCalls || 0;
         let impressions = m.views || 0;
         const sourceResults = m.sourceResults !== undefined ? m.sourceResults : null;
-        const conversions = m.conversions || (leads > 0 ? leads : 0);
+        const conversions = m.conversions || ((leads + phoneCalls) > 0 ? (leads + phoneCalls) : (leads > 0 ? leads : 0));
         const budget = m.budget || 0;
         let revenue = m.revenue || 0;
         let roas = m.roas !== undefined ? m.roas : null;
