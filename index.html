@@ -81,7 +81,7 @@
     @media print {
       @page {
         size: A4 portrait;
-        margin: 12mm 12mm 14mm 12mm;
+        margin: 0 !important; /* Suppresses browser default headers/footers (URL, title, date, sheet counts) */
       }
 
       /* Force exact color printing */
@@ -102,6 +102,15 @@
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+      }
+
+      body:not(.printing-dossier) {
+        padding: 12mm 14mm !important;
+      }
+
+      body.printing-dossier {
+        padding: 0 !important;
+        margin: 0 !important;
       }
 
       /* Hide screen-only interactive chrome */
@@ -196,6 +205,13 @@
         break-inside: avoid !important;
         box-sizing: border-box !important;
         width: 100% !important;
+        min-height: 297mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        padding: 12mm 14mm !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
       }
 
       /* Scoped styling for Full Executive Dossier */
@@ -1660,6 +1676,6 @@
   </div>
 
   <!-- Bootstrapper -->
-  <script type="module" src="./js/app.js?v=20261010_3"></script>
+  <script type="module" src="./js/app.js?v=20261022_1"></script>
 </body>
 </html>
