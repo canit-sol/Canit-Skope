@@ -152,6 +152,32 @@ export class PeriodEngine {
     const trimmed = headerStr.trim();
     if (!trimmed) return null;
 
+    // Check for Excel date serial number (e.g. 45992 = Dec 2025, 46296 = Oct 2026)
+    if (/^\d{5}$/.test(trimmed)) {
+      const serial = parseInt(trimmed, 10);
+      if (serial >= 35000 && serial <= 65000) {
+        const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+        const year = d.getUTCFullYear();
+        const monthIndex = d.getUTCMonth();
+        const monthName = MONTH_NAMES[monthIndex];
+        const startDate = new Date(year, monthIndex, 1);
+        const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+        const endDate = new Date(year, monthIndex, lastDay);
+        const periodId = `${year}_M${String(monthIndex + 1).padStart(2, '0')}_MONTH`;
+        return {
+          periodId,
+          year,
+          month: monthName,
+          monthNumber: monthIndex + 1,
+          weekNumber: 0,
+          startDate: this.toISODate(startDate),
+          endDate: this.toISODate(endDate),
+          periodLabel: `Monthly Summary · ${monthName} ${year}`,
+          isMonthlyAggregate: true
+        };
+      }
+    }
+
     // Detect month name
     const textMonthRegex = /\b(january|february|march|april|may|june|july|august|september|sept|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\b/i;
     const mMatch = trimmed.match(textMonthRegex);

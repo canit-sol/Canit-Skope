@@ -943,6 +943,14 @@ export class CsvEngine {
 
       // 1. Ignore summary rows such as Total, Total Spent, Ads Spends, Boost Spends
       if (/^(total|summary|ads spends|boost spends)/i.test(col0)) {
+        if (/boost spends/i.test(col0)) {
+          isBoosting = false;
+        }
+        continue;
+      }
+
+      // 1b. Skip secondary city breakdown rows already consolidated in parent campaign
+      if (col0 && /^(pune|trichy|varanasi|kanpur|lucknow|mysore)\b/i.test(col0)) {
         continue;
       }
 
@@ -1235,6 +1243,13 @@ export class CsvEngine {
       };
 
       reports.push(report);
+    });
+
+    // Always sort reports descending (newest period first)
+    reports.sort((a, b) => {
+      const dateA = a.period?.startDate ? new Date(a.period.startDate).getTime() : 0;
+      const dateB = b.period?.startDate ? new Date(b.period.startDate).getTime() : 0;
+      return dateB - dateA;
     });
 
     return reports;

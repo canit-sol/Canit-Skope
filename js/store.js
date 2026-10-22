@@ -327,6 +327,12 @@ class AdsStore {
       this.isUnauthorized = false;
 
       if (reports.length > 0) {
+        // Always sort reports newest first (descending by start date)
+        reports.sort((a, b) => {
+          const dateA = a.period?.startDate ? new Date(a.period.startDate).getTime() : 0;
+          const dateB = b.period?.startDate ? new Date(b.period.startDate).getTime() : 0;
+          return dateB - dateA;
+        });
         this.reports = reports;
         this.saveReports(); // cache in localStorage for offline resiliency
         this.masterPublishedAt = data.publishedAt || null;
@@ -344,11 +350,14 @@ class AdsStore {
         }));
         this.saveUploadHistory();
 
-        if (!this.activeReportId || !this.hasReport(this.activeReportId)) {
+        // If activeReportId is unset, invalid, or currently pointing to an older empty/dormant period while active scaled data exists, default to latest report (reports[0])
+        const currentActive = this.getReport(this.activeReportId);
+        const isCurrentActiveDormant = currentActive && ((currentActive.metrics?.spend || 0) < 2000 && (this.reports[0].metrics?.spend || 0) > 10000);
+        if (!this.activeReportId || !this.hasReport(this.activeReportId) || isCurrentActiveDormant) {
           this.activeReportId = this.reports[0].reportId;
           safeStorage.setItem(STORAGE_KEYS.ACTIVE_REPORT, this.activeReportId);
         }
-        if (!this.comparisonReportId || !this.hasReport(this.comparisonReportId)) {
+        if (!this.comparisonReportId || !this.hasReport(this.comparisonReportId) || this.comparisonReportId === this.activeReportId) {
           this.comparisonReportId = this.reports[1] ? this.reports[1].reportId : null;
           if (this.comparisonReportId) {
             safeStorage.setItem(STORAGE_KEYS.COMP_REPORT, this.comparisonReportId);
