@@ -6,3 +6,9 @@ node_modules/
 config/*.server.json
 *.server.json
 
+# Raw client spreadsheets and uploads
+*.xlsx
+*.xls
+*.csv
+*.tmp
+*.log
