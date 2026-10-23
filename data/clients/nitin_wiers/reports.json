@@ -26,18 +26,18 @@
       "status": "Ready",
       "budgetSummary": {
         "allocated": 56886,
-        "spent": 59166,
-        "remaining": 0,
-        "dailyRunRate": 2113,
-        "spendRatePercent": 100.0
+        "spent": 54338,
+        "remaining": 2548,
+        "dailyRunRate": 1941,
+        "spendRatePercent": 95.5
       },
       "metrics": {
-        "spend": 59166,
-        "totalSpend": 59166,
+        "spend": 54338,
+        "totalSpend": 54338,
         "impressions": 152834,
         "clicks": 9098,
         "ctr": 5.95,
-        "cpc": 6.5,
+        "cpc": 5.97,
         "leads": 1068,
         "conversions": 1085.69,
         "sourceResults": 0,
@@ -46,8 +46,8 @@
         "roas": null,
         "allConversions": 1085.69,
         "allConversionsDerived": true,
-        "cpa": 54,
-        "costPerAllConv": 54,
+        "cpa": 50,
+        "costPerAllConv": 50,
         "conversionRate": 11.93
       },
       "campaigns": [
@@ -160,33 +160,6 @@
           "rank": 4
         },
         {
-          "id": "camp_8_Video_views___Youtube",
-          "name": "Video views - Youtube",
-          "platform": "google",
-          "channel": "YouTube",
-          "specialty": "General",
-          "section": "Google",
-          "spend": 4827.09,
-          "budget": 4000.0,
-          "impressions": 1894,
-          "clicks": 0,
-          "cpc": 0.0,
-          "ctr": 0.0,
-          "leads": 0,
-          "conversions": 0.0,
-          "phoneCalls": 0,
-          "sourceResults": null,
-          "revenue": 0,
-          "roas": null,
-          "allConversions": 0.0,
-          "allConversionsDerived": true,
-          "cpa": null,
-          "costPerAllConv": null,
-          "conversionRate": 0.0,
-          "classification": "weak",
-          "rank": 5
-        },
-        {
           "id": "camp_6_PMax_with_Retargeting",
           "name": "PMax with Retargeting",
           "platform": "google",
@@ -211,7 +184,7 @@
           "costPerAllConv": 24,
           "conversionRate": 11.07,
           "classification": "strong",
-          "rank": 6
+          "rank": 5
         },
         {
           "id": "camp_14_Srilanka_Dealers",
@@ -238,7 +211,7 @@
           "costPerAllConv": 281,
           "conversionRate": 2.91,
           "classification": "strong",
-          "rank": 7
+          "rank": 6
         },
         {
           "id": "camp_13_Srilanka_products",
@@ -265,7 +238,7 @@
           "costPerAllConv": 62,
           "conversionRate": 5.38,
           "classification": "strong",
-          "rank": 8
+          "rank": 7
         },
         {
           "id": "camp_10_Retargetting___Instant_form___WA",
@@ -292,13 +265,40 @@
           "costPerAllConv": 24,
           "conversionRate": 11.92,
           "classification": "strong",
+          "rank": 8
+        },
+        {
+          "id": "camp_8_Video_views___Youtube",
+          "name": "Video views - Youtube",
+          "platform": "google",
+          "channel": "YouTube",
+          "specialty": "General",
+          "section": "Google",
+          "spend": 0.0,
+          "budget": 4000.0,
+          "impressions": 1894,
+          "clicks": 0,
+          "cpc": 0.0,
+          "ctr": 0.0,
+          "leads": 0,
+          "conversions": 0.0,
+          "phoneCalls": 0,
+          "sourceResults": null,
+          "revenue": 0,
+          "roas": null,
+          "allConversions": 0.0,
+          "allConversionsDerived": true,
+          "cpa": null,
+          "costPerAllConv": null,
+          "conversionRate": 0.0,
+          "classification": "moderate",
           "rank": 9
         }
       ],
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 9,
         "errors": [],
         "warnings": [],
@@ -768,7 +768,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 15,
         "errors": [],
         "warnings": [],
@@ -1157,7 +1157,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 12,
         "errors": [],
         "warnings": [],
@@ -1573,7 +1573,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 13,
         "errors": [],
         "warnings": [],
@@ -2016,7 +2016,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 14,
         "errors": [],
         "warnings": [],
@@ -2486,7 +2486,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 15,
         "errors": [],
         "warnings": [],
@@ -2875,7 +2875,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 12,
         "errors": [],
         "warnings": [],
@@ -3345,7 +3345,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 15,
         "errors": [],
         "warnings": [],
@@ -3491,7 +3491,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 3,
         "errors": [],
         "warnings": [],
@@ -3637,7 +3637,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 3,
         "errors": [],
         "warnings": [],
@@ -3729,7 +3729,7 @@
       "validation": {
         "isValid": true,
         "status": "Ready",
-        "rowCount": 182,
+        "rowCount": 207,
         "campaignCount": 1,
         "errors": [],
         "warnings": [],

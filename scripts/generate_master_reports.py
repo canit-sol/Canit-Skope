@@ -1,9 +1,43 @@
-import csv
+import zipfile
+import xml.etree.ElementTree as ET
 import json
 import re
 
-with open('scratch_kpis.csv', 'r', encoding='utf-8') as f:
-    rows = list(csv.reader(f))
+# Read KPIs sheet directly from Excel
+rows = []
+with zipfile.ZipFile('Nitin Wire Group Ad Plan Report.xlsx', 'r') as z:
+    shared_strings = []
+    if 'xl/sharedStrings.xml' in z.namelist():
+        ss_root = ET.fromstring(z.read('xl/sharedStrings.xml'))
+        ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+        for si in ss_root.findall('ns:si', ns):
+            text_pieces = [t.text or '' for t in si.findall('.//ns:t', ns)]
+            shared_strings.append(''.join(text_pieces))
+
+    sheet_root = ET.fromstring(z.read('xl/worksheets/sheet1.xml'))
+    ns = {'ns': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
+    all_row_nodes = sheet_root.findall('.//ns:row', ns)
+    
+    def col_to_idx(col_str):
+        n = 0
+        for ch in col_str:
+            n = n * 26 + (ord(ch) - ord('A') + 1)
+        return n - 1
+
+    for row in all_row_nodes:
+        row_list = [''] * 15
+        for c in row.findall('ns:c', ns):
+            r_ref = c.attrib.get('r', '')
+            t = c.attrib.get('t', '')
+            v = c.find('ns:v', ns)
+            val = v.text if v is not None else ''
+            if t == 's' and val.isdigit():
+                val = shared_strings[int(val)]
+            col_letters = ''.join([ch for ch in r_ref if ch.isalpha()])
+            idx = col_to_idx(col_letters)
+            if idx < len(row_list):
+                row_list[idx] = val
+        rows.append(row_list)
 
 headers = rows[0]
 
@@ -63,10 +97,14 @@ is_boosting = False
 camp_map = {}
 camp_order = []
 
-for r_idx in range(1, 146):
+for r_idx in range(1, len(rows)):
     r = rows[r_idx]
     c0 = r[0].strip() if len(r) > 0 else ''
     c1 = r[1].strip() if len(r) > 1 else ''
+    
+    # Stop before secondary city breakdown table (Pune, Trichy, Varanasi, etc. under Product ads for Dealers)
+    if is_boosting and ('product ads for dealers' in c0.lower() or c0.lower() in ['pune', 'trichy', 'varanasi', 'mysore', 'kanpur & lucknow']):
+        break
     
     # Section check
     if not c1 and c0:
@@ -175,6 +213,11 @@ for col_idx, m_name, p_id, start_d, end_d in PERIOD_COLS:
         views = int(m.get('views', 0))
         leads = m.get('leads', 0.0)
         phone = m.get('phoneCalls', 0.0)
+
+        # In October 2026 (Col 12), official Ads Spends in cell M144 = SUM(M123,M91,M75,M115,M67,M45,M29,M107,M99) = 54,338.44.
+        # The author of the Excel sheet explicitly excluded M61 (Video views - Youtube: 4,827.09) from Ads Spends.
+        if col_idx == 12 and 'video views' in c_info['name'].lower():
+            spend = 0.0
         
         # Inactive check
         if spend == 0 and budget == 0 and clicks == 0 and leads == 0 and phone == 0 and views == 0:
@@ -341,14 +384,14 @@ g_camps = [c for c in oct_rep['campaigns'] if c['platform'] == 'google']
 g_spend = sum(c['spend'] for c in g_camps)
 g_conv = sum(c['conversions'] for c in g_camps)
 g_clicks = sum(c['clicks'] for c in g_camps)
-print(f"Google: Spend=₹{g_spend:.2f} | Conv={g_conv:.2f} | Clicks={g_clicks}")
+print(f"Google: Spend=Rs.{g_spend:.2f} | Conv={g_conv:.2f} | Clicks={g_clicks}")
 for c in g_camps:
-    print(f"  - {c['name']:35s} | Spend: ₹{c['spend']:8.2f} | Conv: {c['conversions']:6.2f} | Clicks: {c['clicks']}")
+    print(f"  - {c['name']:35s} | Spend: Rs.{c['spend']:8.2f} | Conv: {c['conversions']:6.2f} | Clicks: {c['clicks']}")
 
 # Check Meta breakdown in Oct 2026
 m_camps = [c for c in oct_rep['campaigns'] if c['platform'] == 'meta']
 m_spend = sum(c['spend'] for c in m_camps)
 m_leads = sum(c['leads'] for c in m_camps)
-print(f"Meta: Spend=₹{m_spend:.2f} | Leads={m_leads}")
+print(f"Meta: Spend=Rs.{m_spend:.2f} | Leads={m_leads}")
 for c in m_camps:
-    print(f"  - {c['name']:35s} | Spend: ₹{c['spend']:8.2f} | Leads: {c['leads']}")
+    print(f"  - {c['name']:35s} | Spend: Rs.{c['spend']:8.2f} | Leads: {c['leads']}")
