@@ -136,39 +136,47 @@ export class ReportsJsonProvider {
       if (e.message === 'UNAUTHORIZED_TOKEN') throw e;
     }
 
-    // Static hosting / offline fallback:
-    // Read from client-scoped localStorage
-    const cachedClientReports = safeStorage.getItem(`vs_ads_reports_client_${cId}`);
-    if (cachedClientReports) {
-      try {
-        const parsed = JSON.parse(cachedClientReports);
-        if (Array.isArray(parsed)) {
-          return {
-            reports: parsed,
-            publishedAt: null,
-            version: '1.0.0',
-            client: { clientId: cId, name: cId.replace(/_/g, ' ') }
-          };
-        }
-      } catch (e) {}
+    // Invalidate stale cached reports if they contain old Google leak (₹28,186) or old version
+    const existingCache = safeStorage.getItem(`vs_ads_reports_client_${cId}`);
+    if (existingCache && (existingCache.includes('28186') || existingCache.includes('28,186'))) {
+      safeStorage.removeItem(`vs_ads_reports_client_${cId}`);
+      safeStorage.removeItem(STORAGE_KEYS.REPORTS);
     }
 
-    // Check if client has uploaded data file on server or static hosting
+    // Static hosting: Fetch authoritative client dataset from repository FIRST
     try {
       const res = await fetch(`./data/clients/${cId}/reports.json?v=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         const repList = Array.isArray(data.reports) ? data.reports : (Array.isArray(data) ? data : []);
         if (repList.length > 0) {
+          // Update client cache with fresh authoritative data
+          safeStorage.setItem(`vs_ads_reports_client_${cId}`, JSON.stringify(repList));
           return {
             reports: repList,
             publishedAt: data.publishedAt || null,
-            version: data.version || '1.0.0',
-            client: { clientId: cId, name: cId.replace(/_/g, ' ') }
+            version: data.version || '1.1.0',
+            client: data.client || { clientId: cId, name: cId.replace(/_/g, ' ') }
           };
         }
       }
     } catch (e) {}
+
+    // Only if network fetch fails (e.g. offline mode), read from client-scoped localStorage
+    const cachedClientReports = safeStorage.getItem(`vs_ads_reports_client_${cId}`);
+    if (cachedClientReports) {
+      try {
+        const parsed = JSON.parse(cachedClientReports);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return {
+            reports: parsed,
+            publishedAt: null,
+            version: '1.1.0',
+            client: { clientId: cId, name: cId.replace(/_/g, ' ') }
+          };
+        }
+      } catch (e) {}
+    }
 
     // Return empty dataset for this client to show the clean Plain Workspace
     return {
